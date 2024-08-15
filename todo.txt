@@ -1,0 +1,51 @@
+I want you to write a crypto bot for me that will trade futures 
+xrp coins on a 30-minute chart via a personal bybit API 
+that uses the API for all actions, 
+I need a bot that works with a futures account 
+to use the API to open buy positions (long), to use it to open a sell position (short), 
+the grid must be configured by default 150 from the price from 0.4 to 0.8.
+ Start and wait for movement on the grid to open positions is available, 
+since with each touch of positions it creates a position, and it does not matter how many positions Opening 
+a position only on the market with and no limit 
+when starting the bot to bot trade at the current price, 
+make it possible to configure a working bot for short or for long a position, 
+it should close all positions if its have positive pnl !!!! 
+
+It is important to make an option not to touch the current balance percentage. 
+this means that 50 percent is allowed, which he saved and 50 used for each trade for the position, 
+
+which then the current balance of USDT via API
+ divides the balance by the number of grids and as much money as he chooses for 1 position, 
+and at the next position, which then the current balance via API and divides it by the amount grids and the amount of money offered for 1 position, 
+and repeats so before to open all positions, 
+
+how to open each position, uses Futures trading and a default adjustable leverage of 10x, 
+
+made it so that I could see what it was doing bot right now in the console, 
+
+to set the balance: only in usdt, which is on the account 
+ and to write how much I owe and how much I always won and updated every minute always 
+ wrote how much he earned after closing trades calculate how many benefits 
+ and wrote how much it was necessary to count 
+
+make the keys to close the bot 
+
+at the end when closing made it so that it wrote how much money was initially then profit 
+how much the bot made and calculate how many positions are still open 
+and how much in positions I owe calculate and write these dollars 
+I will owe in open positions and calculate the balance after it closes all positions 
+and write how much it is in dollars a
+nd at the end of the percentage how much of the starting balance is done 
+
+made so that it wrote each trade in a text file, 
+if the file already exists, then a new one and add 1 to the name 
+
+when closing bot in the trade file wrote how much balance at the end and 
+how much money was and 
+show much percent he spent Checking division by zero: Added a check for zero when calculating the Winning percentage. This is a special division by zero if the initial balance is equal.
+
+make a test code on this bot to check that everything works for the last year on xrp coins on a 30-minute timeframe through the personal API bybit
+Send feedback
+Side panels
+History
+Saved

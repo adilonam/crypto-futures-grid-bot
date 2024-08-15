@@ -1,0 +1,53 @@
+Here’s a summarized version in English:
+
+---
+
+I want you to create a crypto bot that trades XRP futures on the 30-minute chart using my Bybit API.
+
+**Bot Features:**
+
+- The bot should work with a futures account and use the API for all actions.
+- **Trading Actions:**
+  - Open long positions.
+  - Open short positions.
+  - All positions should be opened using market orders, not limit orders.
+  
+- **Grid Trading Strategy:**
+  - A configurable grid (default 150) between the price range of 0.4 to 0.8.
+  - The bot should open a position each time the price touches the grid, regardless of how many positions are already open.
+
+- **Bot Settings:**
+  - Start trading at the current price when the bot launches.
+  - Option to configure the bot for long or short trading.
+  - Positions should only be closed when they are profitable.
+  - Option to reserve a percentage of the balance (e.g., reserve 50% and use the other 50% for trading).
+
+- **Position Management:**
+  - For each position, the bot checks the current USDT balance via the API, divides it by the grid size, and allocates that amount for each position.
+  - This process is repeated for each new position.
+
+- **Leverage:**
+  - The bot should use futures trading with adjustable leverage (default 10x).
+
+- **Console Output:**
+  - Display the balance in USDT.
+  - Show the debt and profit, updating every minute.
+  - Track and display the profit made after closing positions.
+  - Include a hotkey combination to close the bot.
+
+- **End of Session Report:**
+  - When the bot is closed, it should display:
+    - The initial balance.
+    - The profit made.
+    - The number of open positions and the debt in those positions.
+    - The remaining balance after closing all positions and the final amount in dollars.
+    - The percentage profit made from the initial balance.
+
+- **Logging:**
+  - Log every trade in a text file.
+  - If a file already exists, create a new one with an incremented name.
+  - On bot closure, log the final balance, the initial balance, and the percentage profit made.
+  - Implement a zero-division check when calculating percentage gain.
+
+- **Testing:**
+  - Provide test code to verify the bot’s functionality using historical data for XRP on the 30-minute timeframe through the Bybit API.
