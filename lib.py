@@ -14,7 +14,7 @@ load_dotenv()
 class GridBot():
     # Grid trading parameters
     GRID_SIZE = 5  # Number of grid levels
-    PRICE_INTERVAL = 0.001  # Percentage interval between grid levels
+    PRICE_INTERVAL = 0.01  # Percentage interval between grid levels
     TRADE_QUANTITY = 100  # Quantity per trade
     LEVERAGE = 20
     #CRYPTO TO TRADE
