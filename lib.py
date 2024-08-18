@@ -13,7 +13,7 @@ load_dotenv()
 
 class GridBot():
     # Grid trading parameters
-    GRID_SIZE = 5000  # Number of grid levels must be higher than 2
+    GRID_SIZE = 2500  # Number of grid levels must be higher than 2
     GRID_TOP= 0.8
     GRID_BOTTOM = 0.4
     TRADE_TYPE = "Buy"
@@ -30,11 +30,15 @@ class GridBot():
     tolerance=0.01
     bot_id= None
     orders = []
-    current_level = None
+    current_level_index = None
     init = False
+    win = False
+    interval = 0.01
     
     def __init__(self) -> None:
         self.bot_id = self.generate_random_string(5)
+        self.interval = (self.GRID_TOP-self.GRID_BOTTOM)/(self.GRID_SIZE-1)
+        self.set_grid_levels()
         # Retrieve API key and secret from environment variables
         api_key = os.getenv('BYBIT_API_KEY')
         api_secret = os.getenv('BYBIT_API_SECRET')
@@ -69,30 +73,79 @@ class GridBot():
     def generate_random_string(self, length):
         # Choose from uppercase, lowercase letters, and digits
         characters = string.ascii_letters + string.digits
-        return ''.join(random.choice(characters) for _ in range(length))  
+        return ''.join(random.choice(characters) for _ in range(length))
+    
+    def update_current_level_index(self, price):
+        current_lvl_idx = min(range(len(self.grid_levels)), key=lambda i: abs(self.grid_levels[i] - price))
+        if self.current_level_index:
+            if((current_lvl_idx > self.current_level_index ) and self.TRADE_TYPE == "Buy" ) or  ((current_lvl_idx < self.current_level_index ) and self.TRADE_TYPE == "Sell" ):
+                self.win = True
+            else:
+                self.win = False
+        self.current_level_index = current_lvl_idx
         
     def place_grid_orders(self, price):
-            zone_top = self.grid_levels[self.current_level + 1] if (self.current_level + 1) < self.GRID_SIZE else 10000
-            zone_bottom = self.grid_levels[self.current_level - 1]  if (self.current_level + 1) >= 0 else 0
+            if not self.init:
+                self.update_current_level_index(price)
+                self.init = True
+            
+            zone_top = self.grid_levels[self.current_level_index + 1] if (self.current_level_index + 1) < self.GRID_SIZE else 10000
+            zone_bottom = self.grid_levels[self.current_level_index - 1]  if (self.current_level_index - 1) >= 0 else 0
+            
             print('zone top :', zone_top)
             print('zone bottm :', zone_bottom)
+            
             if (price <= zone_bottom or price >= zone_top ):
                 #handle buy
+                # Step 2: Check if there's an open Buy position
                 
                 _order_id = f"{self.bot_id}-{len(self.orders)}"
+                try:
+                    if self.TRADE_TYPE == "Buy":
+                        tp = self.grid_levels[self.current_level_index + 2] if (self.current_level_index + 2) < self.GRID_SIZE else 10000
+                        if(tp <= price):
+                            tp = price + self.interval
+                    else:
+                        tp = self.grid_levels[self.current_level_index - 2]  if (self.current_level_index - 2) >= 0 else 0
+                        if(tp >= price):
+                            tp = price - self.interval
+                    
+                    order = self.session.place_order(
+                        category=self.CATEGORY,
+                        symbol=self.SYMBOL,
+                        side=self.TRADE_TYPE,
+                        orderType="Market",
+                        qty=self.TRADE_QUANTITY,
+                        orderLinkId=self.generate_random_string(5),
+                    )
+                    
+                    
+                    self.orders.append(_order_id)
+                    self.update_current_level_index(price)
+                    print("is win :",self.win)
+                    print(f"Placed {self.TRADE_TYPE} order successfully: {order}")
+                    
+                    try:
+                        self.session.set_trading_stop(
+                            category=self.CATEGORY,
+                            symbol=self.SYMBOL,
+                            takeProfit=str(tp),
+                            tpslMode="Partial",
+                            tpSize=str(self.TRADE_QUANTITY),
+                        )
+                        print("Trading stop successfully set.")
+                    except Exception as e:
+                        print(f"An error occurred while setting the trading stop: {e}")
 
-                order = self.session.place_order(
-                    category=self.CATEGORY,
-                    symbol=self.SYMBOL,
-                    side=self.TRADE_TYPE,
-                    orderType="Market",
-                    qty=self.TRADE_QUANTITY,
-                    timeInForce="PostOnly",
-                    orderLinkId=_order_id,
-                    orderFilter="Order",
-                )
+                except Exception as e:
+                    print(f"Failed to place {self.TRADE_TYPE} order: {e}")
                 
-                print(f"Placed {self.TRADE_TYPE} ", order)
+                
+
+                
+            
+                
+                
                     
               
                 
@@ -106,9 +159,10 @@ class GridBot():
                 category=self.CATEGORY,
                 symbol=self.SYMBOL
             )
+            current_price = None
             # Extract and print the price
             if ticker and 'result' in ticker and 'list' in ticker['result'] and len(ticker['result']['list']) > 0:
-                current_price = float(ticker['result']['list'][0]['lastPrice'])
+                current_price = float(ticker['result']['list'][0]['bid1Price'])
                 
             return current_price
         except Exception as e:
@@ -116,9 +170,9 @@ class GridBot():
             return None
     def set_grid_levels(self):    
         if not self.grid_levels:
-            interval = (self.GRID_TOP-self.GRID_BOTTOM)/(self.GRID_SIZE-1)
+            
             for i in range(self.GRID_SIZE):
-                price_level = self.GRID_BOTTOM + interval*i
+                price_level = self.GRID_BOTTOM + self.interval*i
                 self.grid_levels.append(price_level)
     
     def is_order_exists(self, orderLinkId):
@@ -131,7 +185,7 @@ class GridBot():
         return (response["result"]["list"] != [])     
     def start(self):
         print('id of bot:', self.bot_id)
-        self.set_grid_levels()
+       
         print("gird levels:", self.grid_levels)
         
         while True:
@@ -141,18 +195,10 @@ class GridBot():
             price = self.get_last_price()
             
             print(f"Current XRPUSDT Price: {price}")
-            
-            
-            if not self.init:
-                self.current_level = min(range(len(self.grid_levels)), key=lambda i: abs(self.grid_levels[i] - price))
-                self.init = True
-                
-            
-            print("Current level index ", self.current_level)
-            
-            
+           
             
             self.place_grid_orders(price)
+            print("Current level index ", self.current_level_index)
    
            
             
